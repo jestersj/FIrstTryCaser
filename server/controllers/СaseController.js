@@ -1,10 +1,27 @@
-const {Case} = require('../models')
+const {Case, StartedCases} = require('../models')
 const path = require('path')
 const uuid = require('uuid')
 class CasesController {
     async fetchAll(req, res) {
         const cases = await Case.findAll()
         return res.json(cases)
+    }
+    async fetchStartedCases(req, res) {
+        const {id} = req.user
+        const startedCases = await StartedCases.findAll({where: {userId: id}})
+        const casesId = []
+        startedCases.forEach(el => casesId.push(el.caseId))
+        const result = []
+        for (const el of casesId) {
+            result.push(await Case.findOne({where: {id: el}}))
+        }
+        return res.json(result)
+    }
+    async startCase(req, res) {
+        const userId = req.user.id
+        const caseId = req.body.caseId
+        const startedCase = await StartedCases.create({caseId, userId})
+        return res.json(startedCase)
     }
     async addCase(req, res) {
         const {name, description} = req.body
@@ -14,7 +31,7 @@ class CasesController {
         let presName = uuid.v4() + '.pdf'
         await logo.mv(path.resolve(__dirname, '..', 'static', 'logos', logoName))
         await presentation.mv(path.resolve(__dirname, '..', 'static', 'presentations', presName))
-        const cases = await Case.create({name, description, logo: logoName, presentation: presName, userId: id})
+        const cases = await Case.create({name, description, logo: logoName, presentation: presName, author: id})
         return res.json(cases)
     }
 }

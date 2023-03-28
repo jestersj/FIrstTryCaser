@@ -5,7 +5,7 @@ const ApiError = require('../errors/ApiError')
 
 function createJwt(id, email, role) {
     return jwt.sign(
-        {id, email, password: role},
+        {id, email, role},
         process.env.SECRET_KEY,
         {expiresIn: '24h'}
     )
