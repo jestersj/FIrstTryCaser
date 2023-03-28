@@ -19,9 +19,16 @@ class CasesController {
     }
     async startCase(req, res) {
         const userId = req.user.id
-        const caseId = req.body.caseId
+        const {caseId} = req.query
         const startedCase = await StartedCases.create({caseId, userId})
         return res.json(startedCase)
+    }
+    async finishCase(req, res) {
+        const userId = req.user.id
+        const {caseId} = req.query
+        const finishedCase = await StartedCases.findOne({where: {caseId, userId}})
+        await finishedCase.update({status: 'finished'})
+        return res.json(finishedCase)
     }
     async addCase(req, res) {
         const {name, description} = req.body

@@ -7,6 +7,7 @@ const roleCheckMiddleware = require('../middleware/RoleCheckMiddleware')
 router.post('/add', roleCheckMiddleware('COMPANY'), caseController.addCase)
 router.post('/started', authMiddleware, caseController.startCase)
 router.get('/started', authMiddleware, caseController.fetchStartedCases)
+router.put('/started', authMiddleware, caseController.finishCase)
 router.get('/', caseController.fetchAll)
 
 module.exports = router

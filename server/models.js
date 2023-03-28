@@ -17,6 +17,7 @@ const Case = sequelize.define('case', {
 })
 const StartedCases = sequelize.define('started_cases', {
     id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true},
+    status: {type: DataTypes.STRING, defaultValue: 'started'}
 })
 
 User.hasMany(Case, {foreignKey: 'author'})
