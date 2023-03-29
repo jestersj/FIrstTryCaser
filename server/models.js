@@ -13,7 +13,8 @@ const Case = sequelize.define('case', {
     name: {type: DataTypes.STRING},
     description: {type: DataTypes.STRING},
     logo: {type: DataTypes.STRING, allowNull: false},
-    presentation: {type: DataTypes.STRING}
+    presentation: {type: DataTypes.STRING},
+    status: {type: DataTypes.STRING, defaultValue: 'on_moderation'}
 })
 const StartedCases = sequelize.define('started_cases', {
     id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true},
