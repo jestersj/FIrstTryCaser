@@ -17,12 +17,12 @@ class CasesController {
         let presName = uuid.v4() + '.pdf'
         await logo.mv(path.resolve(__dirname, '..', 'static', 'logos', logoName))
         await presentation.mv(path.resolve(__dirname, '..', 'static', 'presentations', presName))
-        const cases = await Case.create({name, description, logo: logoName, presentation: presName, author: id})
+        const cases = await Case.create({name, description, logo: logoName, presentation: presName, userId: id})
         return res.json(cases)
     }
     async archiveCase(req, res){
         const {caseId} = req.query
-        const archivedCase = await Case.findOne({where: {caseId}})
+        const archivedCase = await Case.findOne({where: {id: caseId}})
         if (archivedCase.status === 'on_moderation') {
             return res.status(401).json({message: 'Кейс на модерации'})
         }
@@ -31,7 +31,7 @@ class CasesController {
     }
     async activateCase(req, res) {
         const {caseId} = req.query
-        const activeCase = await Case.findOne({where: {caseId}})
+        const activeCase = await Case.findOne({where: {id: caseId}})
         if (activeCase.status === 'on_moderation') {
             return res.status(401).json({message: 'Кейс на модерации'})
         }
@@ -45,7 +45,7 @@ class CasesController {
     }
     async approveCase(req, res) {
         const {caseId} = req.query
-        const moderatedCase = await Case.findOne({where: {caseId}})
+        const moderatedCase = await Case.findOne({where: {id: caseId}})
         await moderatedCase.update({status: 'approved'})
         return res.json(moderatedCase)
     }
