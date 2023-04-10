@@ -1,5 +1,5 @@
 const sequelize = require('./db')
-const {DataTypes} = require('sequelize')
+const {DataTypes, UUIDV4} = require('sequelize')
 
 const User = sequelize.define('user', {
     id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey:true},
@@ -7,30 +7,35 @@ const User = sequelize.define('user', {
     password: {type: DataTypes.STRING},
     role: {type: DataTypes.STRING},
     isActive: {type: DataTypes.BOOLEAN, defaultValue: false},
-    activationToken: {type: DataTypes.STRING}
+    activationToken: {type: DataTypes.UUID, defaultValue: UUIDV4}
 })
 
 const Case = sequelize.define('case', {
     id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true},
     name: {type: DataTypes.STRING},
-    description: {type: DataTypes.STRING},
+    description: {type: DataTypes.STRING(7000)},
     logo: {type: DataTypes.STRING, allowNull: false},
     presentation: {type: DataTypes.STRING},
     status: {type: DataTypes.STRING, defaultValue: 'on_moderation'}
 })
-const StartedCases = sequelize.define('started_cases', {
+
+const Solution = sequelize.define('solution', {
     id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true},
-    status: {type: DataTypes.STRING, defaultValue: 'started'}
+    annotation: {type: DataTypes.STRING(7000)},
+    presentation: {type: DataTypes.STRING},
+    status: {type: DataTypes.STRING, defaultValue: 'unsolved'}
 })
 
-User.hasMany(Case, {foreignKey: 'author'})
-// Case.belongsTo(User)
+User.hasMany(Case)
+Case.belongsTo(User)
 
-Case.belongsToMany(User, {through: StartedCases})
-User.belongsToMany(Case, {through: StartedCases})
+User.hasMany(Solution)
+Case.hasMany(Solution)
+Solution.belongsTo(User)
+Solution.belongsTo(Case)
 
 module.exports = {
     User,
     Case,
-    StartedCases
+    Solution
 }

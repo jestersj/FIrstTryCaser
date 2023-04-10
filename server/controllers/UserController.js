@@ -2,7 +2,6 @@ const {User} = require('../models')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const ApiError = require('../errors/ApiError')
-const uuid = require('uuid')
 const transporter = require('../email/transporter')
 
 function createJwt(id, email, role) {
@@ -22,7 +21,7 @@ class UserController {
         if (candidate) {
             return next(ApiError.badRequest('Пользователь с таким email уже существует'))
         }
-        const activationToken = uuid.v4()
+        // const activationToken = uuid.v4()
         //Sending activation link
         // let letter = await transporter.sendMail({
         //     from: '"Casers" valuevmp2@gmail.com',
@@ -31,7 +30,7 @@ class UserController {
         //     text: `http://localhost:4000/api/user/activate?token=${activationToken}`
         // })
         const hashPassword = await bcrypt.hash(password, 5)
-        const user = await User.create({email, role, password: hashPassword, activationToken})
+        const user = await User.create({email, role, password: hashPassword})
         const token = createJwt(user.id, user.email, user.role)
 
         return res.json({token})

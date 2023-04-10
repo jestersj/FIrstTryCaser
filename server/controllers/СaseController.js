@@ -1,4 +1,4 @@
-const {Case, StartedCases} = require('../models')
+const {Case} = require('../models')
 const path = require('path')
 const uuid = require('uuid')
 class CasesController {
@@ -7,31 +7,7 @@ class CasesController {
         const cases = await Case.findAll({where: {status: 'active'}})
         return res.json(cases)
     }
-    //For users
-    async fetchStartedCases(req, res) {
-        const {id} = req.user
-        const startedCases = await StartedCases.findAll({where: {userId: id}})
-        const casesId = []
-        startedCases.forEach(el => casesId.push(el.caseId))
-        const result = []
-        for (const el of casesId) {
-            result.push(await Case.findOne({where: {id: el}}))
-        }
-        return res.json(result)
-    }
-    async startCase(req, res) {
-        const userId = req.user.id
-        const {caseId} = req.query
-        const startedCase = await StartedCases.create({caseId, userId})
-        return res.json(startedCase)
-    }
-    async finishCase(req, res) {
-        const userId = req.user.id
-        const {caseId} = req.query
-        const finishedCase = await StartedCases.findOne({where: {caseId, userId}})
-        await finishedCase.update({status: 'finished'})
-        return res.json(finishedCase)
-    }
+
     //For companies
     async addCase(req, res) {
         const {name, description} = req.body
@@ -72,7 +48,6 @@ class CasesController {
         const moderatedCase = await Case.findOne({where: {caseId}})
         await moderatedCase.update({status: 'approved'})
         return res.json(moderatedCase)
-
     }
 }
 
