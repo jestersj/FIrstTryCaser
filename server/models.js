@@ -5,7 +5,9 @@ const User = sequelize.define('user', {
     id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey:true},
     email: {type: DataTypes.STRING, unique: true},
     password: {type: DataTypes.STRING},
-    role: {type: DataTypes.STRING}
+    role: {type: DataTypes.STRING},
+    isActive: {type: DataTypes.BOOLEAN, defaultValue: false},
+    activationToken: {type: DataTypes.STRING}
 })
 
 const Case = sequelize.define('case', {

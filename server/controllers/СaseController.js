@@ -70,7 +70,7 @@ class CasesController {
     async approveCase(req, res) {
         const {caseId} = req.query
         const moderatedCase = await Case.findOne({where: {caseId}})
-        await moderatedCase.update({status: 'ready'})
+        await moderatedCase.update({status: 'approved'})
         return res.json(moderatedCase)
 
     }
