@@ -16,13 +16,13 @@ class SolutionController {
     }
     async startSolution(req, res) {
         const userId = req.user.id
-        const {caseId} = req.query
+        const {caseId} = req.params
         const solution = await Solution.create({caseId, userId})
         return res.json(solution)
     }
     async finishSolution(req, res) {
         const userId = req.user.id
-        const {caseId} = req.query
+        const {caseId} = req.params
         const {annotation} = req.body
         const {presentation} = req.files
         let presName = uuid.v4() + '.pdf'

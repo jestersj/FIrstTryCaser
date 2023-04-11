@@ -1,10 +1,16 @@
 const {Case} = require('../models')
 const path = require('path')
 const uuid = require('uuid')
+const {where} = require("sequelize");
 class CasesController {
     //For everyone
     async fetchAll(req, res) {
         const cases = await Case.findAll({where: {status: 'active'}})
+        return res.json(cases)
+    }
+    async fetchOne(req, res) {
+        const {caseId} = req.params
+        const cases = await Case.findOne({where: {id: caseId, status: 'active'}})
         return res.json(cases)
     }
 
@@ -20,8 +26,14 @@ class CasesController {
         const cases = await Case.create({name, description, logo: logoName, presentation: presName, userId: id})
         return res.json(cases)
     }
+    async deleteCase(req, res) {
+        const {caseId} = req.params
+        const cases = await Case.findOne({where: {id: caseId}})
+        await cases.destroy()
+        return res.json(cases)
+    }
     async archiveCase(req, res){
-        const {caseId} = req.query
+        const {caseId} = req.params
         const archivedCase = await Case.findOne({where: {id: caseId}})
         if (archivedCase.status === 'on_moderation') {
             return res.status(401).json({message: 'Кейс на модерации'})
@@ -30,7 +42,7 @@ class CasesController {
         return res.json(archivedCase)
     }
     async activateCase(req, res) {
-        const {caseId} = req.query
+        const {caseId} = req.params
         const activeCase = await Case.findOne({where: {id: caseId}})
         if (activeCase.status === 'on_moderation') {
             return res.status(401).json({message: 'Кейс на модерации'})
@@ -44,7 +56,7 @@ class CasesController {
         return res.json(cases)
     }
     async approveCase(req, res) {
-        const {caseId} = req.query
+        const {caseId} = req.params
         const moderatedCase = await Case.findOne({where: {id: caseId}})
         await moderatedCase.update({status: 'approved'})
         return res.json(moderatedCase)
