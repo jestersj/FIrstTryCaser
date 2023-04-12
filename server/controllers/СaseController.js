@@ -2,6 +2,19 @@ const {Case} = require('../models')
 const path = require('path')
 const uuid = require('uuid')
 const {where} = require("sequelize");
+const fs = require('fs')
+
+function unlinkCallback(err) {
+    if(err && err.code === 'ENOENT') {
+        // file doens't exist
+        console.info("File doesn't exist, won't remove it.");
+    } else if (err) {
+        // other errors, e.g. maybe we don't have enough permission
+        console.error("Error occurred while trying to remove file");
+    } else {
+        console.info(`removed`);
+    }
+}
 class CasesController {
     //For everyone
     async fetchAll(req, res) {
@@ -29,6 +42,12 @@ class CasesController {
     async deleteCase(req, res) {
         const {caseId} = req.params
         const cases = await Case.findOne({where: {id: caseId}})
+        await fs.unlink(path.resolve(__dirname, '..', 'static', 'logos', cases.logo), (err) => {
+            err ? console.log(err) : console.log('logo deleted')
+        })
+        await fs.unlink(path.resolve(__dirname, '..', 'static', 'presentations', cases.presentation), (err) => {
+            err ? console.log(err) : console.log('presentation deleted')
+        })
         await cases.destroy()
         return res.json(cases)
     }

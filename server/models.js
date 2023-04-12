@@ -26,6 +26,16 @@ const Solution = sequelize.define('solution', {
     status: {type: DataTypes.STRING, defaultValue: 'unsolved'}
 })
 
+const Appeal = sequelize.define('appeal', {
+    id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true},
+    name: {type: DataTypes.STRING},
+    typeOfUser: {type: DataTypes.STRING},
+    phone: {type: DataTypes.STRING},
+    tg: {type: DataTypes.STRING},
+    communication: {type: DataTypes.STRING},
+    description: {type: DataTypes.STRING(7000)}
+})
+
 User.hasMany(Case)
 Case.belongsTo(User)
 
@@ -37,5 +47,6 @@ Solution.belongsTo(Case)
 module.exports = {
     User,
     Case,
-    Solution
+    Solution,
+    Appeal
 }
