@@ -2,7 +2,9 @@ const {User} = require('../models')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const ApiError = require('../errors/ApiError')
-const emailService = require('../services/EmailService')
+const EmailService = require('../services/EmailService')
+const TokenService = require('../services/TokenService')
+const UserDto = require('../dtos/UserDto')
 
 function createJwt(id, email, role, isActive) {
     return jwt.sign(
@@ -13,26 +15,34 @@ function createJwt(id, email, role, isActive) {
 }
 class UserController {
     async registration(req, res, next) {
-        const {email, password, role} = req.body
-        if (!email || !password) {
-            return next(ApiError.badRequest('Некорректый email или пароль'))
-        }
-        const candidate = await User.findOne({where: {email}})
-        if (candidate) {
-            return next(ApiError.badRequest('Пользователь с таким email уже существует'))
-        }
-        const hashPassword = await bcrypt.hash(password, 5)
-        const user = await User.create({email, role, password: hashPassword})
-        // try {
-        //     await emailService.sendActivationMail(user.email, user.activationToken)
-        // } catch (e) {
-        //     console.log(e)
-        //     await user.destroy()
-        //     return res.json({e})
-        // }
+        try {
+            const {email, password, role} = req.body
+            if (!email || !password) {
+                return next(ApiError.badRequest('Некорректый email или пароль'))
+            }
+            const candidate = await User.findOne({where: {email}})
+            if (candidate) {
+                return next(ApiError.badRequest('Пользователь с таким email уже существует'))
+            }
+            const hashPassword = await bcrypt.hash(password, 5)
+            const user = await User.create({email, role, password: hashPassword})
+            // try {
+            //     await EmailService.sendActivationMail(user.email, user.activationToken)
+            // } catch (e) {
+            //     console.log(e)
+            //     await user.destroy()
+            //     return res.json({e})
+            // }
 
-        const token = createJwt(user.id, user.email, user.role, user.isActive)
-        return res.json({token})
+            // await EmailService.sendActivationMail(user.email, user.activationToken)
+            const userDto = new UserDto(user)
+            const tokens = TokenService.generateTokens({...userDto})
+            await TokenService.saveToken(user.id, tokens.refreshToken)
+            res.cookie('refreshToken', tokens.refreshToken, {maxAge: 14 * 24 * 60 * 60 * 1000, httpOnly: true})
+            return res.json({...tokens, user: userDto})
+        } catch (e) {
+            next(e)
+        }
     }
 
     async login(req, res, next) {

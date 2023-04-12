@@ -10,6 +10,11 @@ const User = sequelize.define('user', {
     activationToken: {type: DataTypes.UUID, defaultValue: UUIDV4}
 })
 
+const Token = sequelize.define('token', {
+    id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey:true},
+    refreshToken: {type: DataTypes.STRING, allowNull: false}
+})
+
 const Case = sequelize.define('case', {
     id: {type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true},
     name: {type: DataTypes.STRING},
@@ -39,6 +44,9 @@ const Appeal = sequelize.define('appeal', {
 User.hasMany(Case)
 Case.belongsTo(User)
 
+User.hasOne(Token)
+Token.belongsTo(User)
+
 User.hasMany(Solution)
 Case.hasMany(Solution)
 Solution.belongsTo(User)
@@ -46,6 +54,7 @@ Solution.belongsTo(Case)
 
 module.exports = {
     User,
+    Token,
     Case,
     Solution,
     Appeal
