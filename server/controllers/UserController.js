@@ -2,11 +2,11 @@ const {User} = require('../models')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const ApiError = require('../errors/ApiError')
-const transporter = require('../email/transporter')
+const emailService = require('../services/EmailService')
 
-function createJwt(id, email, role) {
+function createJwt(id, email, role, isActive) {
     return jwt.sign(
-        {id, email, role},
+        {id, email, role, isActive},
         process.env.SECRET_KEY,
         {expiresIn: '24h'}
     )
@@ -21,18 +21,17 @@ class UserController {
         if (candidate) {
             return next(ApiError.badRequest('Пользователь с таким email уже существует'))
         }
-        // const activationToken = uuid.v4()
-        //Sending activation link
-        // let letter = await transporter.sendMail({
-        //     from: '"Casers" valuevmp2@gmail.com',
-        //     to: 'valuevmp@yandex.ru',
-        //     subject: 'Активация аккаунта Casers',
-        //     text: `http://localhost:4000/api/user/activate?token=${activationToken}`
-        // })
         const hashPassword = await bcrypt.hash(password, 5)
         const user = await User.create({email, role, password: hashPassword})
-        const token = createJwt(user.id, user.email, user.role)
+        // try {
+        //     await emailService.sendActivationMail(user.email, user.activationToken)
+        // } catch (e) {
+        //     console.log(e)
+        //     await user.destroy()
+        //     return res.json({e})
+        // }
 
+        const token = createJwt(user.id, user.email, user.role, user.isActive)
         return res.json({token})
     }
 
@@ -46,7 +45,7 @@ class UserController {
         if (!comparePassword) {
             return next(ApiError.unauthorized('Неверный пароль'))
         }
-        const token = createJwt(user.id, user.email, user.role)
+        const token = createJwt(user.id, user.email, user.role, user.isActive)
         return res.json({token})
     }
 
@@ -55,7 +54,7 @@ class UserController {
         return res.json({token})
     }
     async activateAccount(req, res) {
-        const {token} = req.query
+        const {token} = req.params
         const user = await User.findOne({where: {activationToken: token}})
         if (!user) {
             return res.status(400).json({message: 'Токен активации не валиден'})
