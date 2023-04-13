@@ -5,6 +5,7 @@ const ApiError = require('../errors/ApiError')
 const EmailService = require('../services/EmailService')
 const TokenService = require('../services/TokenService')
 const UserDto = require('../dtos/UserDto')
+const {validationResult} = require('express-validator')
 
 function createJwt(id, email, role, isActive) {
     return jwt.sign(
@@ -16,13 +17,14 @@ function createJwt(id, email, role, isActive) {
 class UserController {
     async registration(req, res, next) {
         try {
-            const {email, password, role} = req.body
-            if (!email || !password) {
-                return next(ApiError.badRequest('Некорректый email или пароль'))
+            const errors = validationResult(req)
+            if (!errors.isEmpty()) {
+                return next(ApiError.badRequest('Ошибка при валидации', errors.array()))
             }
+            const {email, password, role} = req.body
             const candidate = await User.findOne({where: {email}})
             if (candidate) {
-                return next(ApiError.badRequest('Пользователь с таким email уже существует'))
+                return next(ApiError.badRequest(`Пользователь с email "${email}" уже существует`))
             }
             const hashPassword = await bcrypt.hash(password, 5)
             const user = await User.create({email, role, password: hashPassword})
@@ -55,8 +57,22 @@ class UserController {
         if (!comparePassword) {
             return next(ApiError.unauthorized('Неверный пароль'))
         }
-        const token = createJwt(user.id, user.email, user.role, user.isActive)
-        return res.json({token})
+        const userDto = new UserDto(user)
+        const tokens = TokenService.generateTokens({...userDto})
+        await TokenService.saveToken(user.id, tokens.refreshToken)
+        res.cookie('refreshToken', tokens.refreshToken, {maxAge: 14 * 24 * 60 * 60 * 1000, httpOnly: true})
+        return res.json({...tokens, user: userDto})
+    }
+
+    async logout(req, res, next) {
+        try {
+            const {refreshToken} = req.cookies
+            const token = await TokenService.removeToken(refreshToken)
+            res.clearCookie('refreshToken')
+            return res.json(token)
+        } catch (e) {
+            next(e)
+        }
     }
 
     async check(req, res) {

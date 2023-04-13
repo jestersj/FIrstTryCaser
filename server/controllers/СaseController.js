@@ -55,7 +55,7 @@ class CasesController {
         const {caseId} = req.params
         const archivedCase = await Case.findOne({where: {id: caseId}})
         if (archivedCase.status === 'on_moderation') {
-            return res.status(401).json({message: 'Кейс на модерации'})
+            return res.status(403).json({message: 'Кейс на модерации'})
         }
         await archivedCase.update({status: 'archived'})
         return res.json(archivedCase)
@@ -64,7 +64,7 @@ class CasesController {
         const {caseId} = req.params
         const activeCase = await Case.findOne({where: {id: caseId}})
         if (activeCase.status === 'on_moderation') {
-            return res.status(401).json({message: 'Кейс на модерации'})
+            return res.status(403).json({message: 'Кейс на модерации'})
         }
         await activeCase.update({status: 'active'})
         return res.json(activeCase)
