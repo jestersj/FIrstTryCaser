@@ -10,7 +10,7 @@ router.post('/registration',
     userController.registration)
 router.post('/login', userController.login)
 router.post('/logout', userController.logout)
-router.get('/auth', authMiddleware, userController.check)
+router.get('/refresh', authMiddleware, userController.refresh)
 router.get('/activate/:token', userController.activateAccount)
 
 module.exports = router

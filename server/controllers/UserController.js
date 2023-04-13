@@ -75,9 +75,26 @@ class UserController {
         }
     }
 
-    async check(req, res) {
-        const token = createJwt(req.user.id, req.user.email, req.user.role)
-        return res.json({token})
+    async refresh(req, res, next) {
+        try {
+            const {refreshToken} = req.cookies
+            if (!refreshToken) {
+                return next(ApiError.unauthorized('Пользователь не авторизован'))
+            }
+            const userData = TokenService.validateRefreshToken(refreshToken)
+            const tokenFromDb = await TokenService.findToken(refreshToken)
+            if (!userData || !tokenFromDb) {
+                next(ApiError.unauthorized('Пользователь не авторизован'))
+            }
+            const user = await User.findOne({where: {id: userData.id}})
+            const userDto = new UserDto(user)
+            const tokens = TokenService.generateTokens({...userDto})
+            await TokenService.saveToken(user.id, tokens.refreshToken)
+            res.cookie('refreshToken', tokens.refreshToken, {maxAge: 14 * 24 * 60 * 60 * 1000, httpOnly: true})
+            return res.json({...tokens, user: userDto})
+        } catch (e) {
+            next(e)
+        }
     }
     async activateAccount(req, res) {
         const {token} = req.params
