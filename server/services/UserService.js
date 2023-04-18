@@ -1,6 +1,7 @@
-const {User} = require("../models");
+const User = require("../models/index").user;
 const ApiError = require("../errors/ApiError");
 const bcrypt = require("bcrypt");
+const uuid = require('uuid')
 const UserDto = require("../dtos/UserDto");
 const TokenService = require("./TokenService");
 
@@ -11,11 +12,13 @@ class UserService {
             throw ApiError.badRequest(`Пользователь с email "${email}" уже существует`)
         }
         const hashPassword = await bcrypt.hash(password, 5)
-        const user = await User.create({email, role, password: hashPassword})
+        const activationToken = uuid.v4()
+        const user = await User.create({email, role, password: hashPassword, activationToken})
         const userDto = new UserDto(user)
         // await EmailService.sendActivationMail(user.email, user.activationToken)
         const tokens = TokenService.generateTokens({...userDto})
         await TokenService.saveToken(user.id, tokens.refreshToken)
+        console.log('ok')
         return {...tokens, user: userDto}
     }
     async login(email, password) {
