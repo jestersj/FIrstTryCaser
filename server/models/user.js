@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {schema: 'public'})
   User.associate = function(models) {
     User.hasOne(models.token);
+    User.hasMany(models.case)
   };
   return User;
 };

@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     refreshToken: {type: DataTypes.STRING, allowNull: false}
   }, {schema: 'public'})
   Token.associate = function(models) {
-    Token.belongsTo(models.user);
+    Token.belongsTo(models.user, {foreignKey: 'userId'});
   };
   return Token;
 };

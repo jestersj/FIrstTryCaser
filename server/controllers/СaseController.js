@@ -1,19 +1,19 @@
-const {Case} = require('../models')
-const path = require('path')
-const uuid = require('uuid')
-const {where} = require("sequelize");
-const fs = require('fs')
+const CaseService = require('../services/CaseService')
 
 class CasesController {
     //For everyone
     async fetchAll(req, res) {
-        const cases = await Case.findAll({where: {status: 'active'}})
+        const cases = await CaseService.fetchAll()
         return res.json(cases)
     }
-    async fetchOne(req, res) {
-        const {caseId} = req.params
-        const cases = await Case.findOne({where: {id: caseId, status: 'active'}})
-        return res.json(cases)
+    async fetchOne(req, res, next) {
+        try {
+            const {caseId} = req.params
+            const cases = await CaseService.fetchOne(caseId)
+            return res.json(cases)
+        } catch (e) {
+            next(e)
+        }
     }
 
     //For companies
@@ -21,53 +21,49 @@ class CasesController {
         const {name, description} = req.body
         const {id} = req.user
         const {logo, presentation} = req.files
-        let logoName = uuid.v4() + '.jpg'
-        let presName = uuid.v4() + '.pdf'
-        await logo.mv(path.resolve(__dirname, '..', 'static', 'logos', logoName))
-        await presentation.mv(path.resolve(__dirname, '..', 'static', 'presentations', presName))
-        const cases = await Case.create({name, description, logo: logoName, presentation: presName, userId: id})
+        const cases = await CaseService.addCase(name, description, id, logo, presentation)
         return res.json(cases)
     }
-    async deleteCase(req, res) {
-        const {caseId} = req.params
-        const cases = await Case.findOne({where: {id: caseId}})
-        await fs.unlink(path.resolve(__dirname, '..', 'static', 'logos', cases.logo), (err) => {
-            err ? console.log(err) : console.log('logo deleted')
-        })
-        await fs.unlink(path.resolve(__dirname, '..', 'static', 'presentations', cases.presentation), (err) => {
-            err ? console.log(err) : console.log('presentation deleted')
-        })
-        await cases.destroy()
-        return res.json(cases)
-    }
-    async archiveCase(req, res){
-        const {caseId} = req.params
-        const archivedCase = await Case.findOne({where: {id: caseId}})
-        if (archivedCase.status === 'on_moderation') {
-            return res.status(403).json({message: 'Кейс на модерации'})
+    async deleteCase(req, res, next) {
+        try {
+            const {caseId} = req.params
+            const cases = await CaseService.deleteCase(caseId)
+            return res.json(cases)
+        } catch (e) {
+            next(e)
         }
-        await archivedCase.update({status: 'archived'})
-        return res.json(archivedCase)
     }
-    async activateCase(req, res) {
-        const {caseId} = req.params
-        const activeCase = await Case.findOne({where: {id: caseId}})
-        if (activeCase.status === 'on_moderation') {
-            return res.status(403).json({message: 'Кейс на модерации'})
+    async archiveCase(req, res, next){
+        try {
+            const {caseId} = req.params
+            const archivedCase = await CaseService.archiveCase(caseId)
+            return res.json(archivedCase)
+        } catch (e) {
+            next(e)
         }
-        await activeCase.update({status: 'active'})
-        return res.json(activeCase)
+    }
+    async activateCase(req, res, next) {
+        try {
+            const {caseId} = req.params
+            const activeCase = await CaseService.activateCase(caseId)
+            return res.json(activeCase)
+        } catch (e) {
+            next(e)
+        }
     }
     //For admins
     async fetchModeratedCases(req, res) {
-        const cases = await Case.findAll({where: {status: 'on_moderation'}})
+        const cases = await CaseService.fetchModeratedCases()
         return res.json(cases)
     }
-    async approveCase(req, res) {
-        const {caseId} = req.params
-        const moderatedCase = await Case.findOne({where: {id: caseId}})
-        await moderatedCase.update({status: 'approved'})
-        return res.json(moderatedCase)
+    async approveCase(req, res, next) {
+        try {
+            const {caseId} = req.params
+            const moderatedCase = await CaseService.approveCase(caseId)
+            return res.json(moderatedCase)
+        } catch (e) {
+            next(e)
+        }
     }
 }
 

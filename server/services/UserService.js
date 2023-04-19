@@ -18,7 +18,6 @@ class UserService {
         // await EmailService.sendActivationMail(user.email, user.activationToken)
         const tokens = TokenService.generateTokens({...userDto})
         await TokenService.saveToken(user.id, tokens.refreshToken)
-        console.log('ok')
         return {...tokens, user: userDto}
     }
     async login(email, password) {
