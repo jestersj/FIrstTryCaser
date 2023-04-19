@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
   User.associate = function(models) {
     User.hasOne(models.token);
     User.hasMany(models.case)
+    User.hasMany(models.solution)
   };
   return User;
 };
